@@ -117,7 +117,7 @@ public class ServerWorker implements Runnable {
                     System.out.print(res);
                     out.write(res);
                     out.flush();
-                } else if(cmd.equals("ENDOFOPERATIONS") || cmd.equals("QUIT")) {
+                } else if(cmd.equals("QUIT")) {
                     out.close();
                     in.close();
                     client.close();
