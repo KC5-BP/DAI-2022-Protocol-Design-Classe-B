@@ -118,6 +118,8 @@ public class ServerWorker implements Runnable {
                     out.write(res);
                     out.flush();
                 } else if(cmd.equals("QUIT")) {
+                    System.out.println("Closing resources and disconnecting client");
+                    System.out.println("END OF THREAD");
                     out.close();
                     in.close();
                     client.close();
