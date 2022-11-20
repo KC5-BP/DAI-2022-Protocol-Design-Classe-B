@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,10 +42,12 @@ public class Server {
             LOG.log(Level.SEVERE, "Could not listen on port " + PORT, e);
             System.exit(-1);
         }
+        System.out.println("Server started on port " + PORT);
 
         while (true) {
             try {
                 Socket client = server.accept();
+                System.out.println("Deserving client");
                 handleClient(client);
             } catch (IOException e) {
                 LOG.log(Level.SEVERE, "Accept failed on port " + PORT, e);
