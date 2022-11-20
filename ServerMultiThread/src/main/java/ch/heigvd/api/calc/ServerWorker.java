@@ -12,6 +12,10 @@ import java.util.logging.Logger;
 public class ServerWorker implements Runnable {
 
     private final static Logger LOG = Logger.getLogger(ServerWorker.class.getName());
+    private Socket client = null;
+    private BufferedReader  in = null;
+    private BufferedWriter out = null;
+    private final static String ENDOFCMD = "CRLF\r\n";
 
     /**
      * Instantiation of a new worker mapped to a socket
@@ -26,6 +30,14 @@ public class ServerWorker implements Runnable {
          *   server calls the ServerWorker.run method.
          *   Don't call the ServerWorker.run method here. It has to be called from the Server.
          */
+        /* Personal Note: new Thread(...).start calls the run method */
+        try {
+            client = clientSocket;
+            in  = new BufferedReader(new InputStreamReader(client.getInputStream()  , StandardCharsets.UTF_8));
+            out = new BufferedWriter(new OutputStreamWriter(client.getOutputStream(), StandardCharsets.UTF_8));
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, "Cannot create client I/O socket", ex);
+        }
 
     }
 
@@ -45,5 +57,78 @@ public class ServerWorker implements Runnable {
          *     - Send to result to the client
          */
 
+        try {
+            out.write("WELCOME " + ENDOFCMD);
+            out.write("- AVAILABLE OPERATIONS " + ENDOFCMD);
+            out.write("- ADD 2 " + ENDOFCMD);
+            out.write("- MULT 2 " + ENDOFCMD);
+            out.write("- DIV 2 " + ENDOFCMD);
+            out.write("- ENDOFOPERATIONS " + ENDOFCMD);
+            out.flush();    // /!\ ABSOLUTELY NEEDED /!\
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        while(true) {
+            String res = "";
+            try {
+                String line = in.readLine();
+                if(line == null) {
+                    break;
+                }
+                String[] tokens = line.split(" ");
+                if(tokens.length == 0) {
+                    continue;
+                }
+                String cmd = tokens[0];
+                if(cmd.equals("ADD")) {
+                    if(tokens.length != 3) {
+                        out.write("ERROR " + ENDOFCMD);
+                        out.flush();
+                        continue;
+                    }
+                    int a = Integer.parseInt(tokens[1]);
+                    int b = Integer.parseInt(tokens[2]);
+                    res = "RESULT " + (a + b) + " " + ENDOFCMD;
+                    System.out.print(res);
+                    out.write(res);
+                    out.flush();
+                } else if(cmd.equals("MULT")) {
+                    if(tokens.length != 3) {
+                        out.write("ERROR " + ENDOFCMD);
+                        out.flush();
+                        continue;
+                    }
+                    int a = Integer.parseInt(tokens[1]);
+                    int b = Integer.parseInt(tokens[2]);
+                    res = "RESULT " + (a * b) + " " + ENDOFCMD;
+                    System.out.print(res);
+                    out.write(res);
+                    out.flush();
+                } else if(cmd.equals("DIV")) {
+                    if(tokens.length != 3) {
+                        out.write("ERROR " + ENDOFCMD);
+                        out.flush();
+                        continue;
+                    }
+                    int a = Integer.parseInt(tokens[1]);
+                    int b = Integer.parseInt(tokens[2]);
+                    res = "RESULT " + (a / b) + " " + ENDOFCMD;
+                    System.out.print(res);
+                    out.write(res);
+                    out.flush();
+                } else if(cmd.equals("ENDOFOPERATIONS") || cmd.equals("QUIT")) {
+                    out.close();
+                    in.close();
+                    client.close();
+                    break;
+                } else {
+                    out.write("ERROR 400 SYNTAX ERROR " + ENDOFCMD);
+                    out.flush();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
